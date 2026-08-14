@@ -82,3 +82,25 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    container_name: rolecall-config-server
+    restart: unless-stopped
+    environment:
+      EUREKA_HOSTNAME: eureka-server
+    ports:
+      - "8888:8888"
+    networks:
+      - rolecall-net
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

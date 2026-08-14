@@ -1,0 +1,8 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+
+# Datasource, Flyway, and JWT signing config added in feature/auth-service.
