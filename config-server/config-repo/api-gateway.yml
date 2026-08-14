@@ -4,5 +4,38 @@ server:
 spring:
   application:
     name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOriginPatterns: "${CORS_ALLOWED_ORIGINS:http://localhost:5173}"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**,/.well-known/jwks.json
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: job-service
+          uri: lb://job-service
+          predicates:
+            - Path=/api/jobs/**
+        - id: application-service
+          uri: lb://application-service
+          predicates:
+            - Path=/api/applications/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
 
-# Route/security config added in feature/api-gateway and feature/auth-service.
+# JWT resource-server (jwk-set-uri) config added in feature/auth-service.
