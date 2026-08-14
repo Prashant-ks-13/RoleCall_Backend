@@ -41,6 +41,7 @@
         <module>auth-service</module>
         <module>user-service</module>
         <module>job-service</module>
+        <module>application-service</module>
     </modules>
 
     <dependencyManagement>

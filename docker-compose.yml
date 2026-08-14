@@ -239,3 +239,42 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  application-service:
+    build:
+      context: .
+      dockerfile: application-service/Dockerfile
+    container_name: rolecall-application-service
+    restart: unless-stopped
+    environment:
+      EUREKA_HOSTNAME: eureka-server
+      CONFIG_SERVER_URI: http://config-server:8888
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: application_service
+      DB_PASSWORD: ${APPLICATION_DB_PASSWORD:-application_pw}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      AUTH_SERVICE_JWKS_URI: http://auth-service:8081/.well-known/jwks.json
+    ports:
+      - "8084:8084"
+    networks:
+      - rolecall-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      job-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

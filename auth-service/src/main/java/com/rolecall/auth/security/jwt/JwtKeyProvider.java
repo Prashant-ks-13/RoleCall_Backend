@@ -48,7 +48,7 @@ public class JwtKeyProvider {
     private RSAKey rsaJwk;
 
     @PostConstruct
-    void init() throws Exception {
+    public void init() throws Exception {
         if (keystorePath != null && !keystorePath.isBlank()) {
             try {
                 loadFromKeystore();

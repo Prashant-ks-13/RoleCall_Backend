@@ -27,12 +27,12 @@ public class JwtTokenService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     private final JwtKeyProvider keyProvider;
+    private final long accessTokenTtlMinutes;
 
-    @Value("${jwt.access-token.ttl-minutes:15}")
-    private long accessTokenTtlMinutes;
-
-    public JwtTokenService(JwtKeyProvider keyProvider) {
+    public JwtTokenService(JwtKeyProvider keyProvider,
+                            @Value("${jwt.access-token.ttl-minutes:15}") long accessTokenTtlMinutes) {
         this.keyProvider = keyProvider;
+        this.accessTokenTtlMinutes = accessTokenTtlMinutes;
     }
 
     public String issueAccessToken(User user) {
