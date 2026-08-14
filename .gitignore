@@ -13,6 +13,7 @@ target/
 
 .env
 *.env.local
+*.env.*.local
 
 logs/
 *.log
@@ -24,3 +25,12 @@ secrets/
 *.pem
 *.p12
 *.jks
+*.key
+*.crt
+
+# Claude Code local config/session data — never publish to a public repo
+.claude/
+.claude.json
+.claude.json.backup
+*.claude.local.*
+CLAUDE.local.md
