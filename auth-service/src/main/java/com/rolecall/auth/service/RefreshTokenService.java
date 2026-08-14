@@ -25,13 +25,14 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenService jwtTokenService;
+    private final long refreshTokenTtlDays;
 
-    @Value("${jwt.refresh-token.ttl-days:30}")
-    private long refreshTokenTtlDays;
-
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtTokenService jwtTokenService) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository,
+                                JwtTokenService jwtTokenService,
+                                @Value("${jwt.refresh-token.ttl-days:30}") long refreshTokenTtlDays) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenService = jwtTokenService;
+        this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
     @Transactional

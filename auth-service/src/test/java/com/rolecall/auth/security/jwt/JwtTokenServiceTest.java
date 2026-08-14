@@ -19,7 +19,7 @@ class JwtTokenServiceTest {
     void setUp() throws Exception {
         JwtKeyProvider keyProvider = new JwtKeyProvider();
         keyProvider.init(); // no keystore configured -> generates an ephemeral keypair
-        jwtTokenService = new JwtTokenService(keyProvider);
+        jwtTokenService = new JwtTokenService(keyProvider, 15);
     }
 
     @Test

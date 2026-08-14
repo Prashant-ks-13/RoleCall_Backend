@@ -12,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -38,9 +37,8 @@ class RefreshTokenServiceTest {
     void setUp() throws Exception {
         JwtKeyProvider keyProvider = new JwtKeyProvider();
         keyProvider.init();
-        jwtTokenService = new JwtTokenService(keyProvider);
-        refreshTokenService = new RefreshTokenService(refreshTokenRepository, jwtTokenService);
-        setField(refreshTokenService, "refreshTokenTtlDays", 30L);
+        jwtTokenService = new JwtTokenService(keyProvider, 15);
+        refreshTokenService = new RefreshTokenService(refreshTokenRepository, jwtTokenService, 30L);
     }
 
     @Test
@@ -105,11 +103,5 @@ class RefreshTokenServiceTest {
 
         assertThatThrownBy(() -> refreshTokenService.rotate("unknown-token"))
                 .isInstanceOf(InvalidRefreshTokenException.class);
-    }
-
-    private static void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 }
