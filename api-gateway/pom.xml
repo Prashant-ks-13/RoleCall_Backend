@@ -36,12 +36,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!--
-            spring-boot-starter-oauth2-resource-server + spring-boot-starter-webflux-security
-            are added in feature/auth-service, once auth-service's JWKS endpoint exists to
-            validate against. Adding the security starter before that would auto-secure every
-            route with default Spring Security, breaking this skeleton.
-        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
