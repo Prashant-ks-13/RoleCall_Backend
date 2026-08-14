@@ -278,3 +278,44 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: rolecall-payment-service
+    restart: unless-stopped
+    environment:
+      EUREKA_HOSTNAME: eureka-server
+      CONFIG_SERVER_URI: http://config-server:8888
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: payment_service
+      DB_PASSWORD: ${PAYMENT_DB_PASSWORD:-payment_pw}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      AUTH_SERVICE_JWKS_URI: http://auth-service:8081/.well-known/jwks.json
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-http://localhost:5173/payments/success}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-http://localhost:5173/payments/cancel}
+    ports:
+      - "8085:8085"
+    networks:
+      - rolecall-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      job-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
