@@ -4,5 +4,38 @@ server:
 spring:
   application:
     name: job-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/job_db?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:job_service}
+    password: ${DB_PASSWORD:job_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    consumer:
+      # This consumer subscribes to three different event types across three
+      # topics (application.submitted, payment.completed, payment.failed), so
+      # it relies on the producer-side type headers rather than a single
+      # default type — see config-repo/auth-service.yml for the producer-side
+      # rationale.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+    producer:
+      # Used only to publish to *.DLT dead-letter topics on poison-pill messages
+      # (see KafkaErrorHandlingConfig) — this service otherwise produces nothing.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
 
-# Datasource, Flyway, and JWT resource-server config added in feature/job-service.
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

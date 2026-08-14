@@ -17,10 +17,14 @@ spring:
     locations: classpath:db/migration
   kafka:
     consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
-        spring.json.use.type.headers: false
-        spring.json.value.default.type: com.rolecall.common.event.UserRegisteredEvent
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+    producer:
+      # Used only to publish to *.DLT dead-letter topics on poison-pill messages
+      # (see KafkaErrorHandlingConfig) — this service otherwise produces nothing.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   security:
     oauth2:
       resourceserver:
