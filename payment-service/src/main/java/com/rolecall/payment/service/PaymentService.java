@@ -1,0 +1,20 @@
+package com.rolecall.payment.service;
+
+import com.rolecall.payment.dto.CheckoutSessionRequest;
+import com.rolecall.payment.dto.CheckoutSessionResponse;
+import com.rolecall.payment.dto.PageResponse;
+import com.rolecall.payment.dto.PaymentTransactionResponse;
+import org.springframework.data.domain.Pageable;
+
+import java.util.UUID;
+
+public interface PaymentService {
+
+    CheckoutSessionResponse createCheckoutSession(UUID userId, CheckoutSessionRequest request);
+
+    void handleWebhook(String payload, String signatureHeader);
+
+    PageResponse<PaymentTransactionResponse> getMine(UUID userId, Pageable pageable);
+
+    PaymentTransactionResponse getById(UUID id, UUID requesterId, boolean requesterIsAdmin);
+}

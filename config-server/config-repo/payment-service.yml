@@ -4,5 +4,41 @@ server:
 spring:
   application:
     name: payment-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/payment_db?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:payment_service}
+    password: ${DB_PASSWORD:payment_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
 
-# Datasource, Flyway, JWT resource-server, and Stripe config added in feature/payment-service.
+# Stripe secret key and webhook signing secret are always env-injected (see
+# .env.example) — never given a default here, since this is the one config
+# value that is a genuine secret rather than structural config.
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:5173/payments/success}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:5173/payments/cancel}
+
+payment:
+  job-feature:
+    amount-cents: 4900
+    currency: usd
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
