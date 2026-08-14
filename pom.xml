@@ -37,6 +37,7 @@
         <module>rolecall-common</module>
         <module>eureka-server</module>
         <module>config-server</module>
+        <module>api-gateway</module>
     </modules>
 
     <dependencyManagement>
