@@ -40,6 +40,7 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>user-service</module>
+        <module>job-service</module>
     </modules>
 
     <dependencyManagement>

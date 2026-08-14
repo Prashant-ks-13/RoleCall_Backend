@@ -19,8 +19,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
+      # Type headers (FQCN) are left enabled (the default) so consumers that
+      # subscribe to more than one topic — e.g. job-service, which consumes
+      # both application and payment events — can tell payload types apart.
+      # Consumers restrict deserialization to com.rolecall.common.event via
+      # spring.json.trusted.packages (see config-repo/application.yml).
 
 jwt:
   access-token:
