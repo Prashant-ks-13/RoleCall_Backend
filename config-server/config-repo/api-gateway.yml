@@ -1,0 +1,8 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+# Route/security config added in feature/api-gateway and feature/auth-service.

@@ -1,0 +1,8 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: application-service
+
+# Datasource, Flyway, JWT resource-server, and Feign client config added in feature/application-service.
