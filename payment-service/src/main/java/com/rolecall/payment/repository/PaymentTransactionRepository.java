@@ -12,5 +12,5 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     Page<PaymentTransaction> findByUserId(UUID userId, Pageable pageable);
 
-    Optional<PaymentTransaction> findByStripeSessionId(String stripeSessionId);
+    Optional<PaymentTransaction> findByRazorpayPaymentLinkId(String razorpayPaymentLinkId);
 }

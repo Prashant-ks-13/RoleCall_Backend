@@ -294,10 +294,10 @@ services:
       DB_PASSWORD: ${PAYMENT_DB_PASSWORD:-payment_pw}
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       AUTH_SERVICE_JWKS_URI: http://auth-service:8081/.well-known/jwks.json
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-http://localhost:5173/payments/success}
-      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-http://localhost:5173/payments/cancel}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
+      RAZORPAY_CALLBACK_URL: ${RAZORPAY_CALLBACK_URL:-http://localhost:5173/payments/callback}
     ports:
       - "8085:8085"
     networks:

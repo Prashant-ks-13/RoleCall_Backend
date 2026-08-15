@@ -12,9 +12,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * /api/payments/webhook is deliberately public: Stripe calls it directly
+ * /api/payments/webhook is deliberately public: Razorpay calls it directly
  * with no bearer token, and authenticity is instead verified via the
- * Stripe-Signature header inside PaymentServiceImpl.handleWebhook.
+ * X-Razorpay-Signature header inside PaymentServiceImpl.handleWebhook.
  */
 @Configuration
 @EnableWebSecurity

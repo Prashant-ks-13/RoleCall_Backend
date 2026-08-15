@@ -46,11 +46,11 @@ public class PaymentTransaction {
     @Column(nullable = false, length = 3)
     private String currency;
 
-    @Column(name = "stripe_session_id", length = 255)
-    private String stripeSessionId;
+    @Column(name = "razorpay_payment_link_id", length = 255)
+    private String razorpayPaymentLinkId;
 
-    @Column(name = "stripe_payment_intent_id", length = 255)
-    private String stripePaymentIntentId;
+    @Column(name = "razorpay_payment_id", length = 255)
+    private String razorpayPaymentId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

@@ -12,7 +12,11 @@ public interface PaymentService {
 
     CheckoutSessionResponse createCheckoutSession(UUID userId, CheckoutSessionRequest request);
 
-    void handleWebhook(String payload, String signatureHeader);
+    /**
+     * @param eventIdHeader the X-Razorpay-Event-Id header, or null if Razorpay didn't send one
+     *                      for this webhook delivery (see PaymentServiceImpl for the fallback).
+     */
+    void handleWebhook(String payload, String signatureHeader, String eventIdHeader);
 
     PageResponse<PaymentTransactionResponse> getMine(UUID userId, Pageable pageable);
 

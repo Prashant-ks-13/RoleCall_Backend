@@ -1,5 +1,6 @@
 package com.rolecall.payment.service;
 
+import com.razorpay.RazorpayException;
 import com.rolecall.payment.client.JobServiceClient;
 import com.rolecall.payment.client.JobSummary;
 import com.rolecall.payment.dto.CheckoutSessionRequest;
@@ -11,12 +12,10 @@ import com.rolecall.payment.event.PaymentEventProducer;
 import com.rolecall.payment.exception.InvalidWebhookSignatureException;
 import com.rolecall.payment.exception.NotAuthorizedForPaymentException;
 import com.rolecall.payment.exception.PaymentTransactionNotFoundException;
+import com.rolecall.payment.razorpay.RazorpayGateway;
+import com.rolecall.payment.razorpay.RazorpayPaymentLink;
 import com.rolecall.payment.repository.PaymentTransactionRepository;
 import com.rolecall.payment.repository.WebhookEventRepository;
-import com.rolecall.payment.stripe.StripeCheckoutSession;
-import com.rolecall.payment.stripe.StripeGateway;
-import com.stripe.exception.SignatureVerificationException;
-import com.stripe.model.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,7 +46,7 @@ class PaymentServiceImplTest {
     @Mock
     private JobServiceClient jobServiceClient;
     @Mock
-    private StripeGateway stripeGateway;
+    private RazorpayGateway razorpayGateway;
     @Mock
     private PaymentEventProducer eventProducer;
 
@@ -55,9 +55,9 @@ class PaymentServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new PaymentServiceImpl(
-                transactionRepository, webhookEventRepository, jobServiceClient, stripeGateway, eventProducer,
-                4900L, "usd",
-                "http://localhost:5173/success", "http://localhost:5173/cancel", "whsec_test");
+                transactionRepository, webhookEventRepository, jobServiceClient, razorpayGateway, eventProducer,
+                490000L, "INR",
+                "http://localhost:5173/payments/callback", "whsec_test");
     }
 
     @Test
@@ -68,7 +68,7 @@ class PaymentServiceImplTest {
 
         assertThatThrownBy(() -> service.createCheckoutSession(requesterId, new CheckoutSessionRequest(jobId)))
                 .isInstanceOf(NotAuthorizedForPaymentException.class);
-        verify(stripeGateway, never()).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any());
+        verify(razorpayGateway, never()).createPaymentLink(anyLong(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -85,42 +85,64 @@ class PaymentServiceImplTest {
             }
             return t;
         });
-        when(stripeGateway.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any()))
-                .thenReturn(new StripeCheckoutSession("cs_test_123", "https://checkout.stripe.com/cs_test_123"));
+        when(razorpayGateway.createPaymentLink(anyLong(), anyString(), anyString(), anyString(), any()))
+                .thenReturn(new RazorpayPaymentLink("plink_test123", "https://rzp.io/i/plink_test123"));
 
         CheckoutSessionResponse response = service.createCheckoutSession(employerId, new CheckoutSessionRequest(jobId));
 
-        assertThat(response.checkoutUrl()).isEqualTo("https://checkout.stripe.com/cs_test_123");
+        assertThat(response.checkoutUrl()).isEqualTo("https://rzp.io/i/plink_test123");
 
         ArgumentCaptor<PaymentTransaction> captor = ArgumentCaptor.forClass(PaymentTransaction.class);
         verify(transactionRepository, org.mockito.Mockito.times(2)).save(captor.capture());
         PaymentTransaction saved = captor.getValue();
-        assertThat(saved.getStripeSessionId()).isEqualTo("cs_test_123");
+        assertThat(saved.getRazorpayPaymentLinkId()).isEqualTo("plink_test123");
         assertThat(saved.getType()).isEqualTo(PaymentType.JOB_FEATURE);
         assertThat(saved.getStatus()).isEqualTo(PaymentStatus.PENDING);
     }
 
     @Test
     void webhookRejectsInvalidSignature() throws Exception {
-        when(stripeGateway.verifyWebhookSignature(anyString(), anyString(), anyString()))
-                .thenThrow(new SignatureVerificationException("bad signature", "sig"));
+        doThrow(new RazorpayException("bad signature"))
+                .when(razorpayGateway).verifyWebhookSignature(anyString(), anyString(), anyString());
 
-        assertThatThrownBy(() -> service.handleWebhook("{}", "bad-sig"))
+        assertThatThrownBy(() -> service.handleWebhook("{}", "bad-sig", "evt_1"))
                 .isInstanceOf(InvalidWebhookSignatureException.class);
     }
 
     @Test
     void webhookIsIdempotentForAlreadyProcessedEvents() throws Exception {
-        Event event = new Event();
-        event.setId("evt_123");
-        event.setType("checkout.session.completed");
-        when(stripeGateway.verifyWebhookSignature(anyString(), anyString(), anyString())).thenReturn(event);
-        when(webhookEventRepository.existsByStripeEventId("evt_123")).thenReturn(true);
+        when(webhookEventRepository.existsByRazorpayEventId("evt_123")).thenReturn(true);
 
-        service.handleWebhook("{}", "sig");
+        service.handleWebhook("{\"event\":\"payment_link.paid\"}", "sig", "evt_123");
 
         verify(webhookEventRepository, never()).save(any());
-        verify(transactionRepository, never()).findByStripeSessionId(any());
+        verify(transactionRepository, never()).findByRazorpayPaymentLinkId(any());
+    }
+
+    @Test
+    void webhookMarksTransactionSucceededOnPaymentLinkPaid() throws Exception {
+        String payload = """
+                {
+                  "event": "payment_link.paid",
+                  "payload": {
+                    "payment_link": { "entity": { "id": "plink_test123" } },
+                    "payment": { "entity": { "id": "pay_test456" } }
+                  }
+                }
+                """;
+        PaymentTransaction transaction = PaymentTransaction.builder()
+                .id(UUID.randomUUID())
+                .razorpayPaymentLinkId("plink_test123")
+                .status(PaymentStatus.PENDING)
+                .build();
+        when(webhookEventRepository.existsByRazorpayEventId("evt_1")).thenReturn(false);
+        when(transactionRepository.findByRazorpayPaymentLinkId("plink_test123")).thenReturn(Optional.of(transaction));
+
+        service.handleWebhook(payload, "sig", "evt_1");
+
+        assertThat(transaction.getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+        assertThat(transaction.getRazorpayPaymentId()).isEqualTo("pay_test456");
+        verify(eventProducer).publishCompleted(transaction);
     }
 
     @Test
