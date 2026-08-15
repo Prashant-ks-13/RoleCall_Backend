@@ -1,11 +1,10 @@
-# Build context is the repository root (needed for the multi-module Maven reactor).
+# Build context is the repository root: Maven's multi-module reactor needs every
+# module's pom.xml present to parse the build, even when -pl scopes the actual
+# compile/package to just this module.
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
-COPY pom.xml .
-COPY api-gateway/pom.xml api-gateway/pom.xml
-RUN mvn -q -pl api-gateway -am -DskipTests dependency:go-offline
-COPY api-gateway/src api-gateway/src
-RUN mvn -q -pl api-gateway -am -DskipTests package
+COPY . .
+RUN --mount=type=cache,target=/root/.m2/repository mvn -q -pl api-gateway -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
