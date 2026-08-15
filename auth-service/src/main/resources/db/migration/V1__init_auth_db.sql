@@ -13,7 +13,7 @@ CREATE TABLE users (
 CREATE TABLE refresh_tokens (
     id                    BINARY(16)    NOT NULL,
     user_id               BINARY(16)    NOT NULL,
-    token_hash            CHAR(64)      NOT NULL,
+    token_hash            VARCHAR(64)   NOT NULL,
     expires_at            TIMESTAMP(6)  NOT NULL,
     revoked               BOOLEAN       NOT NULL DEFAULT FALSE,
     replaced_by_token_id  BINARY(16)    NULL,
