@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,8 +17,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,5 +82,32 @@ class UserProfileControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.companyName").value("Acme Inc"));
+    }
+
+    @Test
+    void updatingResumeRejectsANonHttpUrl() throws Exception {
+        mockMvc.perform(post("/api/users/me/resume")
+                        .with(SecurityMockMvcRequestPostProcessors.jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"resumeUrl\": \"javascript:alert(1)\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updatingResumeAcceptsAWellFormedHttpsUrl() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse response = new UserProfileResponse(
+                userId, "user@example.com", "CANDIDATE", null, null, null, null, null,
+                "https://cdn.example.com/resume.pdf", null, null, null);
+        when(userProfileService.updateMyResume(eq(userId), eq("https://cdn.example.com/resume.pdf")))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/users/me/resume")
+                        .with(SecurityMockMvcRequestPostProcessors.jwt().jwt(jwt -> jwt.subject(userId.toString())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"resumeUrl\": \"https://cdn.example.com/resume.pdf\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resumeUrl").value("https://cdn.example.com/resume.pdf"));
     }
 }
