@@ -12,7 +12,7 @@ public class OpenApiConfig {
     public OpenAPI paymentServiceOpenApi() {
         return new OpenAPI().info(new Info()
                 .title("RoleCall Payment Service")
-                .description("Stripe (test-mode) payments for featured job listings")
+                .description("Razorpay (test-mode) payments for featured job listings")
                 .version("v1"));
     }
 }

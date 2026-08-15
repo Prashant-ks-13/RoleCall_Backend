@@ -13,7 +13,7 @@
     <artifactId>payment-service</artifactId>
     <packaging>jar</packaging>
     <name>payment-service</name>
-    <description>Stripe (test-mode) checkout for featured job listings, with webhook-driven confirmation</description>
+    <description>Razorpay (test-mode) checkout for featured job listings, with webhook-driven confirmation</description>
 
     <dependencies>
         <dependency>
@@ -81,8 +81,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.stripe</groupId>
-            <artifactId>stripe-java</artifactId>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
         </dependency>
 
         <dependency>

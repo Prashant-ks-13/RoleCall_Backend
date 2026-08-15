@@ -25,19 +25,25 @@ spring:
         jwt:
           jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
 
-# Stripe secret key and webhook signing secret are always env-injected (see
-# .env.example) — never given a default here, since this is the one config
-# value that is a genuine secret rather than structural config.
-stripe:
-  secret-key: ${STRIPE_SECRET_KEY}
-  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-  success-url: ${STRIPE_SUCCESS_URL:http://localhost:5173/payments/success}
-  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:5173/payments/cancel}
+# Razorpay key secret and webhook signing secret are always env-injected (see
+# .env.example) — never given a default here, since these are genuine secrets
+# rather than structural config. key-id is not itself secret but travels with
+# them for locality.
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  # Where Razorpay redirects the browser after payment (GET, per callback_method).
+  # This is a redirect target, not a webhook — job-service's FEATURED status still
+  # comes from the webhook alone, so a user closing the tab before the redirect
+  # fires doesn't affect correctness.
+  callback-url: ${RAZORPAY_CALLBACK_URL:http://localhost:5173/payments/callback}
 
 payment:
   job-feature:
-    amount-cents: 4900
-    currency: usd
+    # Amount in paise (smallest INR unit) — 490000 paise = ₹4,900.
+    amount-paise: 490000
+    currency: INR
 
 springdoc:
   swagger-ui:

@@ -15,9 +15,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Idempotency ledger: Stripe may redeliver the same webhook event, and this
- * table's unique constraint on stripeEventId ensures it's only ever
- * processed once.
+ * Idempotency ledger: Razorpay may redeliver the same webhook event, and
+ * this table's unique constraint on razorpayEventId ensures it's only ever
+ * processed once. Sourced from the X-Razorpay-Event-Id header when present;
+ * see PaymentServiceImpl for the fallback when it's absent.
  */
 @Entity
 @Table(name = "webhook_events")
@@ -31,8 +32,8 @@ public class WebhookEvent {
     @Id
     private UUID id;
 
-    @Column(name = "stripe_event_id", nullable = false, unique = true, length = 255)
-    private String stripeEventId;
+    @Column(name = "razorpay_event_id", nullable = false, unique = true, length = 255)
+    private String razorpayEventId;
 
     @Column(nullable = false, length = 100)
     private String type;

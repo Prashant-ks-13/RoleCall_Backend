@@ -102,7 +102,7 @@ Content-Type: application/json
   "note": "Looks promising"
 }
 
-### 10. Employer starts a Stripe Checkout Session to feature the job
+### 10. Employer starts a Razorpay Payment Link checkout to feature the job
 # @name checkout
 POST {{gateway}}/api/payments/checkout-session
 Authorization: Bearer {{employerToken}}
@@ -112,9 +112,14 @@ Content-Type: application/json
   "jobId": "{{jobId}}"
 }
 
-### Open checkout.checkoutUrl in a browser and pay with Stripe's test card 4242 4242 4242 4242.
-### Stripe can't reach localhost directly — run the Stripe CLI alongside docker compose:
-###   stripe listen --forward-to localhost:8080/api/payments/webhook
+### Open checkout.checkoutUrl in a browser and pay with a Razorpay test-mode card
+### (4111 1111 1111 1111, any future expiry, any CVV) or the test UPI VPA success@razorpay.
+### Razorpay can't reach localhost directly — expose it with a tunnel (e.g. ngrok):
+###   ngrok http 8080
+### then set the tunnel's https URL + /api/payments/webhook as the webhook URL under
+### Settings > Webhooks in the Razorpay Dashboard (test mode), subscribed to the
+### payment_link.paid, payment_link.cancelled, and payment_link.expired events, using
+### RAZORPAY_WEBHOOK_SECRET as the webhook secret.
 ### After a successful payment, confirm the job flipped to FEATURED:
 GET {{gateway}}/api/jobs/{{jobId}}
 

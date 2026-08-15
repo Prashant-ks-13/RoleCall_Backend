@@ -29,7 +29,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <springdoc.version>2.6.0</springdoc.version>
         <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
-        <stripe.version>29.2.0</stripe.version>
+        <razorpay.version>1.4.8</razorpay.version>
         <testcontainers.version>1.20.1</testcontainers.version>
     </properties>
 
@@ -72,9 +72,9 @@
                 <version>${nimbus-jose-jwt.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.stripe</groupId>
-                <artifactId>stripe-java</artifactId>
-                <version>${stripe.version}</version>
+                <groupId>com.razorpay</groupId>
+                <artifactId>razorpay-java</artifactId>
+                <version>${razorpay.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>

@@ -15,7 +15,7 @@ Spring Boot microservices, service discovery via Eureka, centralized config via 
 | `user-service` | User profiles | 8082 |
 | `job-service` | Job postings, search | 8083 |
 | `application-service` | Job applications, status tracking | 8084 |
-| `payment-service` | Stripe (test mode) payments for featured listings | 8085 |
+| `payment-service` | Razorpay (test mode) payments for featured listings | 8085 |
 
 See [docs/kafka-topics.md](docs/kafka-topics.md) for the event contract between services and [docs/smoke-test.http](docs/smoke-test.http) for an end-to-end manual verification script.
 

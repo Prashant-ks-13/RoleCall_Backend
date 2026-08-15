@@ -57,7 +57,7 @@ class PaymentControllerTest {
     @Test
     void checkoutSessionSucceedsForEmployer() throws Exception {
         when(paymentService.createCheckoutSession(any(), any()))
-                .thenReturn(new CheckoutSessionResponse(UUID.randomUUID(), "https://checkout.stripe.com/cs_test"));
+                .thenReturn(new CheckoutSessionResponse(UUID.randomUUID(), "https://rzp.io/i/test"));
 
         mockMvc.perform(post("/api/payments/checkout-session")
                         .with(SecurityMockMvcRequestPostProcessors.jwt()
@@ -71,9 +71,10 @@ class PaymentControllerTest {
     @Test
     void webhookIsReachableWithoutAuthentication() throws Exception {
         mockMvc.perform(post("/api/payments/webhook")
-                        .header("Stripe-Signature", "t=123,v1=abc")
+                        .header("X-Razorpay-Signature", "abc123")
+                        .header("X-Razorpay-Event-Id", "evt_1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\": \"evt_1\"}"))
+                        .content("{\"event\": \"payment_link.paid\"}"))
                 .andExpect(status().isOk());
     }
 

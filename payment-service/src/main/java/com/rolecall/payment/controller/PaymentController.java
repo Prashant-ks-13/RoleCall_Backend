@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payments")
-@Tag(name = "Payments", description = "Stripe (test-mode) payments for featured job listings")
+@Tag(name = "Payments", description = "Razorpay (test-mode) payments for featured job listings")
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -37,17 +37,18 @@ public class PaymentController {
 
     @PostMapping("/checkout-session")
     @PreAuthorize("hasRole('EMPLOYER')")
-    @Operation(summary = "Create a Stripe Checkout Session to feature a job posting")
+    @Operation(summary = "Create a Razorpay Payment Link to feature a job posting")
     public CheckoutSessionResponse createCheckoutSession(@AuthenticationPrincipal Jwt jwt,
                                                            @Valid @RequestBody CheckoutSessionRequest request) {
         return paymentService.createCheckoutSession(userId(jwt), request);
     }
 
     @PostMapping("/webhook")
-    @Operation(summary = "Stripe webhook receiver (verified via Stripe-Signature, not a bearer token)")
+    @Operation(summary = "Razorpay webhook receiver (verified via X-Razorpay-Signature, not a bearer token)")
     public ResponseEntity<Void> webhook(@RequestBody String payload,
-                                         @RequestHeader("Stripe-Signature") String signature) {
-        paymentService.handleWebhook(payload, signature);
+                                         @RequestHeader("X-Razorpay-Signature") String signature,
+                                         @RequestHeader(value = "X-Razorpay-Event-Id", required = false) String eventId) {
+        paymentService.handleWebhook(payload, signature, eventId);
         return ResponseEntity.ok().build();
     }
 

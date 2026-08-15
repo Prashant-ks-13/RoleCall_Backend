@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface WebhookEventRepository extends JpaRepository<WebhookEvent, UUID> {
 
-    boolean existsByStripeEventId(String stripeEventId);
+    boolean existsByRazorpayEventId(String razorpayEventId);
 }
