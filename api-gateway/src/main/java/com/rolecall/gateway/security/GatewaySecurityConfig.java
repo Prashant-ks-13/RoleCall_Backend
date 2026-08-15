@@ -30,6 +30,7 @@ public class GatewaySecurityConfig {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.POST,
                                 "/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout")
                         .permitAll()
