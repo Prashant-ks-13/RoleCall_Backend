@@ -1,0 +1,34 @@
+# Shared, non-secret config layered under every service's own {service}.yml.
+# Secrets (DB passwords, JWT keystore, Stripe keys) are NEVER placed here —
+# they're injected as environment variables (see .env.example).
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:localhost}:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.rolecall.common.event
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"

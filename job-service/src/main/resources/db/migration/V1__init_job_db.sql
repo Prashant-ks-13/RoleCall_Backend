@@ -1,0 +1,23 @@
+CREATE TABLE jobs (
+    id                BINARY(16)     NOT NULL,
+    employer_id       BINARY(16)     NOT NULL,
+    title             VARCHAR(200)   NOT NULL,
+    description       VARCHAR(8000)  NOT NULL,
+    company           VARCHAR(150)   NOT NULL,
+    location          VARCHAR(150)   NOT NULL,
+    type              VARCHAR(20)    NOT NULL,
+    arrangement       VARCHAR(20)    NOT NULL,
+    experience_level  VARCHAR(50)    NOT NULL,
+    salary_min        INT            NULL,
+    salary_max        INT            NULL,
+    status            VARCHAR(20)    NOT NULL,
+    featured_until    TIMESTAMP(6)   NULL,
+    applicant_count   INT            NOT NULL DEFAULT 0,
+    created_at        TIMESTAMP(6)   NOT NULL,
+    updated_at        TIMESTAMP(6)   NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_jobs_employer_id (employer_id),
+    KEY idx_jobs_status (status),
+    KEY idx_jobs_type (type),
+    KEY idx_jobs_arrangement (arrangement)
+);

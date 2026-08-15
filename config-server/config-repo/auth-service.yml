@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/auth_db?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:auth_service}
+    password: ${DB_PASSWORD:auth_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Type headers (FQCN) are left enabled (the default) so consumers that
+      # subscribe to more than one topic — e.g. job-service, which consumes
+      # both application and payment events — can tell payload types apart.
+      # Consumers restrict deserialization to com.rolecall.common.event via
+      # spring.json.trusted.packages (see config-repo/application.yml).
+
+jwt:
+  access-token:
+    ttl-minutes: 15
+  refresh-token:
+    ttl-days: 30
+  keystore:
+    path: ${JWT_KEYSTORE_PATH:}
+    password: ${JWT_KEYSTORE_PASSWORD:}
+  key:
+    alias: ${JWT_KEY_ALIAS:rolecall-auth}
+    password: ${JWT_KEY_PASSWORD:}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

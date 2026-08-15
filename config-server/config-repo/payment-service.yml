@@ -1,0 +1,50 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/payment_db?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:payment_service}
+    password: ${DB_PASSWORD:payment_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
+
+# Razorpay key secret and webhook signing secret are always env-injected (see
+# .env.example) — never given a default here, since these are genuine secrets
+# rather than structural config. key-id is not itself secret but travels with
+# them for locality.
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  # Where Razorpay redirects the browser after payment (GET, per callback_method).
+  # This is a redirect target, not a webhook — job-service's FEATURED status still
+  # comes from the webhook alone, so a user closing the tab before the redirect
+  # fires doesn't affect correctness.
+  callback-url: ${RAZORPAY_CALLBACK_URL:http://localhost:5173/payments/callback}
+
+payment:
+  job-feature:
+    # Amount in paise (smallest INR unit) — 490000 paise = ₹4,900.
+    amount-paise: 490000
+    currency: INR
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

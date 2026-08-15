@@ -1,0 +1,30 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: application-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/application_db?useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:application_service}
+    password: ${DB_PASSWORD:application_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,154 @@
+### RoleCall Backend — End-to-End Smoke Test
+### Works with the VS Code "REST Client" extension or IntelliJ's built-in HTTP client.
+### Run `docker compose up --build` first and wait for all services to report healthy
+### (`docker compose ps`). All requests go through the gateway on :8080.
+
+@gateway = http://localhost:8080
+
+### 0a. Health checks
+GET {{gateway}}/actuator/health
+
+### 0b.
+GET http://localhost:8761
+# Eureka dashboard — confirm all 7 services (gateway + 5 business + itself) are registered
+
+### 1. Register an employer
+# @name registerEmployer
+POST {{gateway}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "employer@example.com",
+  "password": "password123",
+  "role": "EMPLOYER"
+}
+
+### 2. Register a candidate
+# @name registerCandidate
+POST {{gateway}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "candidate@example.com",
+  "password": "password123"
+}
+
+###
+@employerToken = {{registerEmployer.response.body.accessToken}}
+@employerId = {{registerEmployer.response.body.userId}}
+@candidateToken = {{registerCandidate.response.body.accessToken}}
+@candidateId = {{registerCandidate.response.body.userId}}
+
+### 3. Confirm user-service asynchronously created both profile shells
+# (May need a retry if run immediately — Kafka consumption is async.)
+GET {{gateway}}/api/users/me
+Authorization: Bearer {{employerToken}}
+
+###
+GET {{gateway}}/api/users/me
+Authorization: Bearer {{candidateToken}}
+
+### 4. Employer posts a job
+# @name createJob
+POST {{gateway}}/api/jobs
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "title": "Backend Engineer",
+  "description": "Build and operate our Spring Boot services.",
+  "company": "Acme Inc",
+  "location": "Remote",
+  "type": "FULL_TIME",
+  "arrangement": "REMOTE",
+  "experienceLevel": "2-4 years",
+  "salaryMin": 90000,
+  "salaryMax": 130000
+}
+
+###
+@jobId = {{createJob.response.body.id}}
+
+### 5. Browse jobs — public, no token, paginated to match the frontend's 9-per-page grid
+GET {{gateway}}/api/jobs?search=Backend&page=0&size=9
+
+### 6. Candidate applies
+# @name apply
+POST {{gateway}}/api/applications
+Authorization: Bearer {{candidateToken}}
+Content-Type: application/json
+
+{
+  "jobId": "{{jobId}}"
+}
+
+###
+@applicationId = {{apply.response.body.id}}
+
+### 7. Confirm applicantCount incremented (async via Kafka — retry if it shows 0 immediately)
+GET {{gateway}}/api/jobs/{{jobId}}
+
+### 8. Employer views applicants for the job
+GET {{gateway}}/api/applications/job/{{jobId}}
+Authorization: Bearer {{employerToken}}
+
+### 9. Employer moves the application to UNDER_REVIEW
+PUT {{gateway}}/api/applications/{{applicationId}}/status
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "status": "UNDER_REVIEW",
+  "note": "Looks promising"
+}
+
+### 10. Employer starts a Razorpay Payment Link checkout to feature the job
+# @name checkout
+POST {{gateway}}/api/payments/checkout-session
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "jobId": "{{jobId}}"
+}
+
+### Open checkout.checkoutUrl in a browser and pay with a Razorpay test-mode card
+### (4111 1111 1111 1111, any future expiry, any CVV) or the test UPI VPA success@razorpay.
+### Razorpay can't reach localhost directly — expose it with a tunnel (e.g. ngrok):
+###   ngrok http 8080
+### then set the tunnel's https URL + /api/payments/webhook as the webhook URL under
+### Settings > Webhooks in the Razorpay Dashboard (test mode), subscribed to the
+### payment_link.paid, payment_link.cancelled, and payment_link.expired events, using
+### RAZORPAY_WEBHOOK_SECRET as the webhook secret.
+### After a successful payment, confirm the job flipped to FEATURED:
+GET {{gateway}}/api/jobs/{{jobId}}
+
+### --- Negative cases ---
+
+### 11. Expired/garbage token -> 401 at the gateway
+GET {{gateway}}/api/users/me
+Authorization: Bearer not-a-real-token
+
+### 12. Candidate attempting to post a job -> 403
+POST {{gateway}}/api/jobs
+Authorization: Bearer {{candidateToken}}
+Content-Type: application/json
+
+{
+  "title": "Should be rejected",
+  "description": "N/A",
+  "company": "N/A",
+  "location": "N/A",
+  "type": "FULL_TIME",
+  "arrangement": "REMOTE",
+  "experienceLevel": "0-2 years"
+}
+
+### 13. Candidate applying twice to the same job -> 409
+POST {{gateway}}/api/applications
+Authorization: Bearer {{candidateToken}}
+Content-Type: application/json
+
+{
+  "jobId": "{{jobId}}"
+}

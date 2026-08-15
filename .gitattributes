@@ -1,0 +1,4 @@
+# Shell scripts must keep LF line endings regardless of the checkout platform's
+# core.autocrlf setting — a CRLF shebang line breaks "bad interpreter" inside Linux
+# containers (this bit infra/mysql/init/01-init-schemas.sh during Docker builds).
+*.sh text eol=lf
