@@ -26,7 +26,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(new SecurityHeadersFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new SecurityHeadersFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new LoginAttemptLimiterFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
