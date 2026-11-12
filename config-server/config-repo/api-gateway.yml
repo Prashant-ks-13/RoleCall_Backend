@@ -21,24 +21,62 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**,/.well-known/jwks.json
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-service
+                fallbackUri: forward:/fallback/auth-service
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: user-service
+                fallbackUri: forward:/fallback/user-service
         - id: job-service
           uri: lb://job-service
           predicates:
             - Path=/api/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: job-service
+                fallbackUri: forward:/fallback/job-service
         - id: application-service
           uri: lb://application-service
           predicates:
             - Path=/api/applications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: application-service
+                fallbackUri: forward:/fallback/application-service
         - id: payment-service
           uri: lb://payment-service
           predicates:
             - Path=/api/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-service
+                fallbackUri: forward:/fallback/payment-service
   security:
     oauth2:
       resourceserver:
         jwt:
           jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
+
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
